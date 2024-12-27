@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Monitoring Dashboard</title>
+    <link href="./tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="./xlsx.full.min.js" crossorigin="anonymous"></script>
+    <script src="./chart.js"></script>
+    <style>
+        .container {
+            display: grid;
+            grid-template-columns: 1.25fr 0.75fr;
+            margin: auto;
+        }
+        .inner-container-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            margin-right: 40px;
+        }
+
+        .inner-container-video {
+            display: grid;  
+        }
+        .video-element {
+            width: 100%;
+            height: 100%;
+            
+        }
+
+        button {
+            width: 200px; /* Fixed width */
+            height: 50px; /* Fixed height */
+        }
+        #time-table {
+            width: 100%; /* Fixed width for the table */
+            height: 300px; /* Fixed height */
+            overflow-y: auto; /* Allow vertical scrolling */
+            display: block; /* Ensures table scrolls properly */
+            border-collapse: collapse;
+            border: 1px solid transparent;
+        }
+
+
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+          }
+          
+          
+       
+    </style>
+</head>
+<body >
+    <div class="flex flex-col h-full">
+        
+        <div class="grid grid-cols-12 border-b border-black mb-4 md:grid-cols-12 sm:grid-cols-6 xs:grid-cols-4"> 
+            <div class="col-span-1 md:col-span-1 sm:col-span-2 xs:col-span-1 flex flex-col justify-center items-center border-b border-r border-black">
+                <div class="text-xl font-bold">DATE</div>
+                <div id="date-column"></div>
+            </div>
+            <div class="col-span-1 md:col-span-1 sm:col-span-2 xs:col-span-1 flex flex-col justify-center items-center border-r border-b border-black">
+                <div class="text-xl font-bold">TIME</div>
+                <div id="time-column"></div>
+            </div>
+            <div class="col-span-1 md:col-span-1 sm:col-span-2 xs:col-span-1 flex flex-col justify-center items-center border-r border-b border-black">
+                <div class="text-xl font-bold">SHIFT</div>
+                <div id="shift-column"></div>
+            </div>
+            <div class="col-span-2 md:col-span-2 sm:col-span-4 xs:col-span-2 flex flex-col justify-center items-center border-r border-b border-black">
+                <div class="text-xl font-bold">Remaining Shift Time</div>
+                <div id="remaining-shift-time-column"></div>
+            </div>
+            <div class="col-span-2 md:col-span-2 sm:col-span-4 xs:col-span-2 flex flex-col justify-center items-center border-r border-b border-black">
+                <div class="text-xl font-bold">Machine</div>
+                <div id="machine-column">Drill Machine</div>
+            </div>
+            <div class="col-span-2 md:col-span-2 sm:col-span-4 xs:col-span-2 flex flex-col justify-center items-center border-r border-b border-black">
+                <div class="text-xl font-bold">Product</div>
+                <div id="product-column">Workpiece A</div>
+            </div>
+            <div class="col-span-2 md:col-span-2 sm:col-span-4 xs:col-span-2 flex flex-col justify-center items-center border-r border-b border-black">
+                <div class="text-xl font-bold">Shift No</div>
+                <div>11</div>
+            </div>
+            <div class="col-span-1 md:col-span-1 sm:col-span-2 xs:col-span-1 flex flex-col justify-center items-center border-r border-b border-black">
+                <div class="text-xl font-bold">Workpiece</div>
+                <div id="workpiece-column"></div>
+            </div>
+        </div>
+       
+        <!-- Main Container -->
+        <div class="container">
+            
+            <!-- Chart Container -->
+            
+            <div class="inner-container-charts" id="chartsContainer">
+                <div class="chart-grid" id="chart-grid">
+                    <canvas id="barLineChart"></canvas>
+                    
+                </div>
+              
+
+            </div>
+                
+           
+            <!-- Video and Table Container -->
+            <div class="inner-container-video">
+                <video id="myVideo" controls autoplay muted >
+                    <source src="./Stimulate_v.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="flex justify-center mt-6">
+                    <button type="button"  onclick="onButtonClick()" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Analyze next Workpiece</button>
+                </div>
+                <table id="time-table" class="w-full border-collapse border border-black">
+                    <!-- Table Header -->
+                    <thead>
+                        <tr class="border border-black">
+                            <th class="border border-black p-2">Serial No.</th>
+                            <th class="border border-black p-2">Operation</th>
+                            <th class="border border-black p-2">Starting Time</th>
+                            <th class="border border-black p-2">Actual Ending Time</th>
+                            <th class="border border-black p-2">Expected Ending Time</th>
+                            
+                        </tr>
+                    </thead>
+                </table>
+
+                <div class="p-4 mb-4 text-l text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" id="message" role="alert">
+                    
+                  </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="barchart.js"></script>
+</body>
+</html>
