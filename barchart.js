@@ -31,106 +31,115 @@ let barLineChart;
 
 let delays = [];
 async function loadExcelAndGenerateCharts() {
-  try {
-    const response = await fetch("./data/Book2.xlsx");
-    const arrayBuffer = await response.arrayBuffer();
-
-    const workbook = XLSX.read(arrayBuffer, { type: "array" });
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    const headers = jsonData[0];
-    const columns = jsonData.slice(1).map((row) => row.map(Number));
-    ctx = document.getElementById("barLineChart").getContext("2d");
-
-    // Chart configuration
-    barLineChart = new Chart(ctx, {
-      type: "bar", // Bar chart
-      data: {
-        labels: headers.slice(0, 6),
-
-        datasets: [
-          {
-            label: "Actual Time (Bar)",
-            data: columns[rowi + 1].slice(0, 6),
-            backgroundColor: "rgba(0, 4, 255, 0.59)",
-            borderColor: "rgba(0, 4, 255, 1)",
-            borderWidth: 1,
+    try {
+      const response = await fetch("./data/Book2.xlsx");
+      const arrayBuffer = await response.arrayBuffer();
+  
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      const headers = jsonData[0];
+      const columns = jsonData.slice(1).map((row) => row.map(Number));
+      ctx = document.getElementById("barLineChart").getContext("2d");
+  
+      // Chart configuration for bar chart
+      barLineChart = new Chart(ctx, {
+        type: "bar", // Bar chart
+        data: {
+          labels: headers.slice(0, 6),
+          datasets: [
+            {
+              label: "Actual Time (Bar)",
+              data: columns[rowi + 1].slice(0, 6),
+              backgroundColor: "rgba(0, 4, 255, 0.59)",
+              borderColor: "rgba(0, 4, 255, 1)",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              title: {
+                display: true,
+                text: "Actual Cycle Time",
+                color: "black",
+                font: {
+                  weight: "bold",
+                  size: 13,
+                },
+              },
+              beginAtZero: true,
+            },
           },
-        ],
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
+          plugins: {
+            legend: {
+              labels: {
+                color: "black",
+              },
+            },
             title: {
-              display: true,
-              text: "Actual Cycle Time",
-              color: "black",
-              font: {
-                weight: "bold",
-                size: 13,
-              },
-            },
-            beginAtZero: true,
-          },
-        },
-        plugins: {
-          legend: {
-            labels: {
               color: "black",
             },
-          },
-          title: {
-            color: "black",
-          },
-          tooltip: {
-            callbacks: {
-              label: function (context) {
-                return `${context.dataset.label}: ${context.raw} seconds`;
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return `${context.dataset.label}: ${context.raw} seconds`;
+                },
               },
             },
           },
         },
-      },
-    });
-
-    headers
-      .slice(headers.length - 1, headers.length)
-      .forEach((header, index) => {
+      });
+  
+      // Process the last header and its column separately
+      const lastHeaderIndex = headers.length - 1;
+      const lastHeader = headers[lastHeaderIndex];
+      const lastColumnData = columns
+        .map((row) => row[lastHeaderIndex])
+        .filter(Number.isFinite);
+  
+      const lastGaussianData10 = calculateGaussian(lastColumnData.slice(0, rowi));
+      const lastPeak10 = getPeakXValue(lastGaussianData10);
+  
+      const lastGaussianData11 = calculateGaussian(
+        lastColumnData.slice(0, rowi + 1)
+      );
+      const lastX11 = lastColumnData[rowi + 1];
+      const lastIsDanger = lastX11 > lastPeak10;
+  
+      createChart(
+        lastHeader,
+        lastGaussianData10,
+        lastGaussianData11,
+        lastX11,
+        lastIsDanger
+      );
+  
+      // Process all headers except the last one
+      headers.slice(0, lastHeaderIndex).forEach((header, index) => {
         const columnData = columns
           .map((row) => row[index])
           .filter(Number.isFinite);
-
+  
         const gaussianData10 = calculateGaussian(columnData.slice(0, rowi));
         const peak10 = getPeakXValue(gaussianData10);
-
-        const gaussianData11 = calculateGaussian(columnData.slice(0, rowi + 1));
-        const x11 = columnData[rowi];
-
+  
+        const gaussianData11 = calculateGaussian(
+          columnData.slice(0, rowi + 1)
+        );
+        const x11 = columnData[rowi + 1];
+  
         const isDanger = x11 > peak10;
-
+  
         createChart(header, gaussianData10, gaussianData11, x11, isDanger);
       });
-
-    headers.slice(0, headers.length - 1).forEach((header, index) => {
-      const columnData = columns
-        .map((row) => row[index])
-        .filter(Number.isFinite);
-
-      const gaussianData10 = calculateGaussian(columnData.slice(0, rowi));
-      const peak10 = getPeakXValue(gaussianData10);
-
-      const gaussianData11 = calculateGaussian(columnData.slice(0, rowi + 1));
-      const x11 = columnData[rowi];
-
-      const isDanger = x11 > peak10;
-
-      createChart(header, gaussianData10, gaussianData11, x11, isDanger);
-    });
-  } catch (error) {
-    console.error("Error loading or processing the Excel file:", error);
+    } catch (error) {
+      console.error("Error loading or processing the Excel file:", error);
+    }
   }
-}
+  
 
 function calculateGaussian(data) {
   const mean = data.reduce((a, b) => a + b, 0) / data.length;
@@ -176,67 +185,62 @@ function createChart(header, gaussianData10, gaussianData11, x11, isDanger) {
     };
   
     new Chart(canvas.getContext("2d"), {
-      type: "line",
-      data: {
-        datasets: [
-          {
-            label: `Overall`,
-            data: gaussianData10,
-            backgroundColor: "rgba(0, 4, 255, 0.1)",
-            borderColor: "rgba(0, 4, 255, 0.59)",
-            fill: true,
-          },
-          
-        ],
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: header,
-              color: "black",
-              font: {
-                weight: "bold",
-                size: 13,
+        type: "line",
+        data: {
+          datasets: [
+            {
+              label: `Overall`,
+              data: gaussianData10,
+              backgroundColor: "rgba(0, 4, 255, 0.1)",
+              borderColor: "rgba(0, 4, 255, 0.59)",
+              fill: true,
+            },
+            {
+              label:'cycle time',
+              data: [{ x: x11, y: 0 }, { x: x11, y: Math.max(...gaussianData10.map(d => d.y)) }],
+              borderColor: colors.backgroundColor, // Vertical line color
+              borderWidth: 2,
+              
+              fill: false,
+              showLine: true,
+            },
+            
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function (tooltipItem) {
+                  if (tooltipItem.dataset.label === "x11 Value") {
+                    return `x11: ${tooltipItem.raw.x}, y: ${tooltipItem.raw.y}`;
+                  }
+                  return tooltipItem.dataset.label;
+                },
               },
             },
-            type: "linear",
           },
-          y: {
-            beginAtZero: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: header,
+                color: "black",
+                font: {
+                  weight: "bold",
+                  size: 13,
+                },
+              },
+              type: "linear",
+            },
+            y: {
+              beginAtZero: true,
+            },
           },
         },
-        
-      },
-      plugins: [{
-        afterDraw: function (chart) {
-          const ctx = chart.ctx;
-          const xAxis = chart.scales.x;
-          const chartArea = chart.chartArea;
+      });
       
-          // Get pixel position for x-axis value `x11`
-          const xValue = xAxis.getPixelForValue(x11);
-      
-          // Restrict the vertical line within the chart area
-          ctx.save();
-          ctx.strokeStyle = colors.backgroundColor; // Line color
-          ctx.lineWidth = 2; // Line thickness
-          ctx.beginPath();
-      
-          // Start at the top of the chart area and go to the bottom
-          ctx.moveTo(xValue, chartArea.top); // Top boundary
-          ctx.lineTo(xValue, chartArea.bottom); // Bottom boundary
-      
-          ctx.stroke();
-          ctx.restore();
-        }
-      }]
-      
-  
-    });
-  
   
   if (hr === 1) {
     const horizontalLine = document.createElement("div");
