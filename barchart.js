@@ -1,31 +1,31 @@
 let videoTime, totalDuration, table;
 
 function startTimer() {
-    if (isRunning) return;  // Don't start if already running
+    if (isRunning) return;  
     isRunning = true;
     timerInterval = setInterval(() => {
-        curr += 0.01;  // Increment by 0.01 seconds
-    }, 10);  // 10ms interval for high precision
+        curr += 0.01; 
+    }, 10);  
 }
 
-// Function to pause the timer
+
 function pauseTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
     isRunning = false;
 }
-// Start the timer automatically when the video starts playing
+
 const videoElement = document.getElementById("myVideo");
 
 videoElement.addEventListener('play', function () {
-    startTimer(); // Start the timer when the video starts playing
+    startTimer(); 
 });
 
-// If the video is paused, stop the timer as well
+
 videoElement.addEventListener('pause', function () {
-    pauseTimer(); // Pause the timer when the video is paused
+    pauseTimer(); 
 });
-//spacebar pause feature
+
 
 let rowi = 10;
 
@@ -69,7 +69,7 @@ async function loadExcelAndGenerateCharts() {
                 title: {
                     display: true,
                     text: 'Actual Cycle Time',
-                    color: 'black' // Set y-axis title color to black
+                    color: 'black' 
                 },
                 beginAtZero: true
             }
@@ -77,11 +77,11 @@ async function loadExcelAndGenerateCharts() {
         plugins: {
             legend: {
                 labels: {
-                    color: 'black' // Set legend labels color to black
+                    color: 'black' 
                 }
             },
             title: {
-                color: 'black' // Set chart title color to black
+                color: 'black' 
             },
             tooltip: {
                 callbacks: {
@@ -209,17 +209,17 @@ function createChart(header, gaussianData10, gaussianData11, x11, isDanger) {
 }
 
 function populateRandomDetails() {
-    // Generate random date
+   
     const today = new Date();
-    const randomDay = today.getDate() + Math.floor(Math.random() * 30); // Add up to 30 random days
+    const randomDay = today.getDate() + Math.floor(Math.random() * 30); 
     const randomDate = new Date(today.getFullYear(), today.getMonth(), randomDay);
 
-    // Generate random time 
+   
     const randomHours = Math.floor(Math.random() * 24);
     const randomMinutes = Math.floor(Math.random() * 60);
     const randomTime = new Date(randomDate.getFullYear(), randomDate.getMonth(), randomDate.getDate(), randomHours, randomMinutes);
 
-    // Format date and time for display
+    
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     const formattedDate = today.toLocaleDateString('en-US', options);
 
@@ -235,7 +235,7 @@ function populateRandomDetails() {
 }
 
 
-let headers = [];  // Declare headers and columns globally
+let headers = [];  
 let columns = [];
 let curr = 0;
 let timerInterval = null;
@@ -247,24 +247,97 @@ let serial = 0;
 
 
 
-// Listen for the spacebar key press to toggle play/pause of the video and timer
+
 document.addEventListener('keydown', function (event) {
     event.preventDefault();
     const video = document.getElementById("myVideo");
 
     if (event.code === "Space") {
         if (video.paused) {
-            // Play the video and resume the timer
+          
             video.play();
             startTimer();
         } else {
-            // Pause the video and stop the timer
+           
             video.pause();
             pauseTimer();
         }
     }
 });
 
+function handleNoMoreWorkpieces() {
+  
+    document.body.innerHTML = '';
+
+   
+    const loadingContainer = document.createElement('div');
+    loadingContainer.style.display = 'flex';
+    loadingContainer.style.flexDirection = 'column';
+    loadingContainer.style.justifyContent = 'center';
+    loadingContainer.style.alignItems = 'center';
+    loadingContainer.style.height = '100vh';
+    loadingContainer.style.backgroundColor = '#f4f4f4';
+    loadingContainer.style.textAlign = 'center';
+
+    
+    const spinner = document.createElement('div');
+    spinner.style.border = '6px solid #ddd';
+    spinner.style.borderTop = '6px solid #007BFF';
+    spinner.style.borderRadius = '50%';
+    spinner.style.width = '50px';
+    spinner.style.height = '50px';
+    spinner.style.animation = 'spin 1s linear infinite';
+    loadingContainer.appendChild(spinner);
+
+   
+    const loadingText = document.createElement('p');
+    loadingText.textContent = 'Processing...';
+    loadingText.style.marginTop = '15px';
+    loadingText.style.fontSize = '18px';
+    loadingText.style.fontWeight = 'bold';
+    loadingText.style.color = '#333';
+    loadingContainer.appendChild(loadingText);
+
+    document.body.appendChild(loadingContainer);
+
+    
+    setTimeout(() => {
+        
+        document.body.innerHTML = '';
+
+       
+        const messageContainer = document.createElement('div');
+        messageContainer.style.display = 'flex';
+        messageContainer.style.flexDirection = 'column';
+        messageContainer.style.justifyContent = 'center';
+        messageContainer.style.alignItems = 'center';
+        messageContainer.style.height = '100vh';
+        messageContainer.style.backgroundColor = '#f4f4f4';
+        messageContainer.style.textAlign = 'center';
+
+       
+        const message = document.createElement('h1');
+        message.textContent = 'No more workpieces left to be processed. Reload the page to review analysis';
+        message.style.color = '#333';
+        message.style.fontSize = '24px';
+        message.style.fontWeight = 'bold';
+        message.style.marginBottom = '20px';
+        messageContainer.appendChild(message);
+
+       
+        document.body.appendChild(messageContainer);
+    }, 500);
+
+   
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+}
 
 let nor = 10;
 async function fetchExcelData() {
@@ -286,6 +359,11 @@ async function fetchExcelData() {
         // }
 
         // Check if video time has reached a certain point and add/update rows in the table
+        if(rowi+1===20)
+        {
+            handleNoMoreWorkpieces(); // Clear page and display message
+            return;
+        }
         if (starttime <= curr && hi < (headers.length - 1)) {
             const updatedValues = createrow();
             starttime = updatedValues.starttime;
@@ -303,7 +381,7 @@ let atp = 0;
 function createrow() {
     let tbody = document.getElementById("time-table").querySelector('tbody');
 
-    // Ensure tbody exists
+    
     if (!tbody) {
         const newTbody = document.createElement("tbody");
         document.getElementById("time-table").appendChild(newTbody);
@@ -317,7 +395,7 @@ function createrow() {
     const newRow = document.createElement("tr");
     newRow.classList.add("border", "border-black");
 
-    // Add cells to the row with the operation and other data
+  
     newRow.innerHTML = `
                 <td class="border border-black p-1">${serial + 1}</td> <!-- Serial No. -->
                 <td class="border border-black p-1">${headers[hi]}</td> <!-- Operation -->
@@ -326,15 +404,15 @@ function createrow() {
                 <td class="border border-black p-1">${at[atp]}</td> <!-- Expected Ending Time -->
             `;
 
-    // Append the new row to the table body
+   
     tbody.appendChild(newRow);
 
-    // Return updated values for the next operation
+    
     return {
-        starttime: parseFloat((starttime + cycletime).toFixed(2)), // Update starttime for the next row
-        serial: serial + 1,               // Increment the serial number
+        starttime: parseFloat((starttime + cycletime).toFixed(2)), 
+        serial: serial + 1,             
         hi: hi + 1,
-        atp: atp + 1               // Increment the index (to move to the next operation)
+        atp: atp + 1               
     };
 }
 let ds;
@@ -343,19 +421,19 @@ let ds;
 function message() {
     const video = document.getElementById("myVideo");
 
-    // Listen for the 'ended' event to show the message
+   
     video.addEventListener("ended", function () {
         document.getElementById("message").style.visibility = "visible";
         ds = delays.join(", ");
         document.getElementById("message").innerHTML = `There is a delay in : ${ds}`;
     });
 
-    // Check for near end using a range for safety
+    
     video.addEventListener("timeupdate", function () {
         if (Math.abs(curr - totalDuration) < 0.1) {
             document.getElementById("message").style.visibility = "visible";
             const ds = delays.join(", ");
-            if (ds === "") { // Check if ds is an empty string
+            if (ds === "") { 
                 document.getElementById("message").innerHTML = "There were no delays observed!";
             } else {
                 document.getElementById("message").innerHTML = `There is a delay in :  ${ds}`;
@@ -366,17 +444,13 @@ function message() {
     });
 }
 
-// Call `message` after video element and delays array are ready
+
 document.getElementById("myVideo").addEventListener("loadedmetadata", () => {
     totalDuration = document.getElementById("myVideo").duration;
     message();
 });
 
-// <block:setup:1>
 
-
-
-// Call the function to fetch and process the Excel data
 fetchExcelData();
 loadExcelAndGenerateCharts();
 
@@ -389,13 +463,13 @@ function onButtonClick() {
     if (barLineChart) {
         barLineChart.destroy();
     }
-    // Step 1: Clear previous charts
+    
     const chartsContainer = document.getElementById("chartsContainer");
     while (chartsContainer.firstChild) {
         chartsContainer.removeChild(chartsContainer.firstChild);
     }
 
-    // Step 2: Clear previous table rows
+   
     const tbody = document.getElementById("time-table").querySelector('tbody');
     if (tbody) {
         tbody.innerHTML = '';  // Clear existing rows
@@ -409,7 +483,7 @@ function onButtonClick() {
     chartGridElement.id = 'chart-grid';
     chartGridElement.className = 'chart-grid';
 
-    // Step 3: Create a new canvas element for the bar chart
+    
     const barChartCanvas = document.createElement('canvas');
     barChartCanvas.id = 'barLineChart';
 
@@ -422,7 +496,7 @@ function onButtonClick() {
 
 
 
-    // Step 3: Reset the current time (curr)
+   
     curr = 0;
     hi = 0;
     starttime = 0;
@@ -431,14 +505,12 @@ function onButtonClick() {
     delays = [];
     atp = 0;
 
-    // Step 4: Reset the video to the beginning and play it
+    
     const video = document.getElementById("myVideo");
-    video.currentTime = 0; // Reset video to start
-    video.play(); // Play the video from the beginning
-
-    // Step 5: Re-initialize the analysis with the new data
-    rowi++; // Reset rowi (or any other variables if needed)
-
+    video.currentTime = 0;
+    video.play();
+   
+    rowi++; 
     document.getElementById("workpiece-column").textContent = rowi + 1;
     fetchExcelData();
     loadExcelAndGenerateCharts();
