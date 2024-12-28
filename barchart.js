@@ -211,15 +211,16 @@ function createChart(header, gaussianData10, gaussianData11, x11, isDanger) {
           responsive: true,
           plugins: {
             tooltip: {
-              callbacks: {
-                label: function (tooltipItem) {
-                  if (tooltipItem.dataset.label === "x11 Value") {
-                    return `x11: ${tooltipItem.raw.x}, y: ${tooltipItem.raw.y}`;
-                  }
-                  return tooltipItem.dataset.label;
+                callbacks: {
+                  label: function (tooltipItem) {
+                    if (tooltipItem.dataset.label === "cycle time") {
+                      return `x: ${tooltipItem.raw.x}, y: ${tooltipItem.raw.y.toFixed(2)}`; // Show x and y for cycle time
+                    }
+                    return `x: ${tooltipItem.raw.x}, y: ${tooltipItem.raw.y.toFixed(2)}`; // General case
+                  },
                 },
               },
-            },
+              
           },
           scales: {
             x: {
