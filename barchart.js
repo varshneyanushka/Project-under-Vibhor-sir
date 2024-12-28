@@ -158,64 +158,86 @@ function getPeakXValue(gaussianData) {
 let hr = 1;
 
 function createChart(header, gaussianData10, gaussianData11, x11, isDanger) {
-  const chartContainer = document.createElement("div");
-  chartContainer.classList.add("chart-grid");
-  const canvas = document.createElement("canvas");
-  chartContainer.appendChild(canvas);
-  document.getElementById("chartsContainer").appendChild(chartContainer);
-  if (isDanger) {
-    delays.push(header);
-  }
-
-  const colors = {
-    backgroundColor: isDanger
-      ? "rgba(255, 0, 0, 0.2)"
-      : "rgba(0, 192, 36, 0.1)",
-    borderColor: isDanger ? "rgba(255, 0, 0, 1)" : "rgba(0, 192, 36, 0.63)",
-  };
-
-  new Chart(canvas.getContext("2d"), {
-    type: "line",
-    data: {
-      datasets: [
-        {
-          label: `First ${rowi} Data Points`,
-          data: gaussianData10,
-          borderColor: "rgba(0, 4, 255, 0.59)",
-          fill: true,
-        },
-        {
-          label: `First ${rowi + 1} Data Points`,
-          data: gaussianData11,
-
-          backgroundColor: colors.backgroundColor,
-          borderColor: colors.borderColor,
-          fill: true,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: header,
-            color: "black",
-            font: {
-              weight: "bold", // Makes the text bold
-              size: 13, // Adjust the size if needed
-            },
+    const chartContainer = document.createElement("div");
+    chartContainer.classList.add("chart-grid");
+    const canvas = document.createElement("canvas");
+    chartContainer.appendChild(canvas);
+    document.getElementById("chartsContainer").appendChild(chartContainer);
+  
+    if (isDanger) {
+      delays.push(header);
+    }
+  
+    const colors = {
+      backgroundColor: isDanger
+        ? "rgba(255, 0, 0, 1)"
+        : "rgba(0, 192, 36, 1)",
+      borderColor: isDanger ? "rgba(255, 0, 0, 1)" : "rgba(0, 192, 36, 0.63)",
+    };
+  
+    new Chart(canvas.getContext("2d"), {
+      type: "line",
+      data: {
+        datasets: [
+          {
+            label: `Overall`,
+            data: gaussianData10,
+            backgroundColor: "rgba(0, 4, 255, 0.1)",
+            borderColor: "rgba(0, 4, 255, 0.59)",
+            fill: true,
           },
-          type: "linear",
-          align: screenLeft,
-        },
-
-        y: { beginAtZero: true },
+          
+        ],
       },
-    },
-  });
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: header,
+              color: "black",
+              font: {
+                weight: "bold",
+                size: 13,
+              },
+            },
+            type: "linear",
+          },
+          y: {
+            beginAtZero: true,
+          },
+        },
+        
+      },
+      plugins: [{
+        afterDraw: function (chart) {
+          const ctx = chart.ctx;
+          const xAxis = chart.scales.x;
+          const chartArea = chart.chartArea;
+      
+          // Get pixel position for x-axis value `x11`
+          const xValue = xAxis.getPixelForValue(x11);
+      
+          // Restrict the vertical line within the chart area
+          ctx.save();
+          ctx.strokeStyle = colors.backgroundColor; // Line color
+          ctx.lineWidth = 2; // Line thickness
+          ctx.beginPath();
+      
+          // Start at the top of the chart area and go to the bottom
+          ctx.moveTo(xValue, chartArea.top); // Top boundary
+          ctx.lineTo(xValue, chartArea.bottom); // Bottom boundary
+      
+          ctx.stroke();
+          ctx.restore();
+        }
+      }]
+      
+  
+    });
+  
+  
   if (hr === 1) {
     const horizontalLine = document.createElement("div");
     horizontalLine.className = "horizontal-line";
