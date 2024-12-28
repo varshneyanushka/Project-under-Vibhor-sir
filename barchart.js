@@ -512,3 +512,9 @@ function onButtonClick() {
   fetchExcelData();
   loadExcelAndGenerateCharts();
 }
+
+
+window.onload = function () {
+    const loadingOverlay = document.getElementById("loading-overlay");
+    loadingOverlay.style.display = "none";
+  };
