@@ -31,115 +31,109 @@ let barLineChart;
 
 let delays = [];
 async function loadExcelAndGenerateCharts() {
-    try {
-      const response = await fetch("./data/Book2.xlsx");
-      const arrayBuffer = await response.arrayBuffer();
-  
-      const workbook = XLSX.read(arrayBuffer, { type: "array" });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      const headers = jsonData[0];
-      const columns = jsonData.slice(1).map((row) => row.map(Number));
-      ctx = document.getElementById("barLineChart").getContext("2d");
-  
-      // Chart configuration for bar chart
-      barLineChart = new Chart(ctx, {
-        type: "bar", // Bar chart
-        data: {
-          labels: headers.slice(0, 6),
-          datasets: [
-            {
-              label: "Actual Time (Bar)",
-              data: columns[rowi + 1].slice(0, 6),
-              backgroundColor: "rgba(0, 4, 255, 0.59)",
-              borderColor: "rgba(0, 4, 255, 1)",
-              borderWidth: 1,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              title: {
-                display: true,
-                text: "Actual Cycle Time",
-                color: "black",
-                font: {
-                  weight: "bold",
-                  size: 13,
-                },
-              },
-              beginAtZero: true,
-            },
+  try {
+    const response = await fetch("./data/Book2_copy.xlsx");
+    const arrayBuffer = await response.arrayBuffer();
+
+    const workbook = XLSX.read(arrayBuffer, { type: "array" });
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    const headers = jsonData[0];
+    const columns = jsonData.slice(1).map((row) => row.map(Number));
+    const ctx = document.getElementById("barLineChart").getContext("2d");
+
+    // Chart configuration for bar chart
+    const barLineChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: headers.slice(0, 6),
+        datasets: [
+          {
+            label: "Actual Time (Bar)",
+            data: columns[rowi + 1].slice(0, 6),
+            backgroundColor: "rgba(0, 4, 255, 0.59)",
+            borderColor: "rgba(0, 4, 255, 1)",
+            borderWidth: 1,
           },
-          plugins: {
-            legend: {
-              labels: {
-                color: "black",
+        ],
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            title: {
+              display: true,
+              text: "Actual Cycle Time",
+              color: "black",
+              font: {
+                weight: "bold",
+                size: 13,
               },
             },
-            title: {
+            beginAtZero: true,
+          },
+        },
+        plugins: {
+          legend: {
+            labels: {
               color: "black",
             },
-            tooltip: {
-              callbacks: {
-                label: function (context) {
-                  return `${context.dataset.label}: ${context.raw} seconds`;
-                },
+          },
+          title: {
+            color: "black",
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return `${context.dataset.label}: ${context.raw} seconds`;
               },
             },
           },
         },
-      });
-  
-      // Process the last header and its column separately
-      const lastHeaderIndex = headers.length - 1;
-      const lastHeader = headers[lastHeaderIndex];
-      const lastColumnData = columns
-        .map((row) => row[lastHeaderIndex])
+      },
+    });
+
+    // Process the last header and its column separately
+    const lastHeaderIndex = headers.length - 1;
+    const lastHeader = headers[lastHeaderIndex];
+    const lastColumnData = columns
+      .map((row) => row[lastHeaderIndex])
+      .filter(Number.isFinite);
+
+    const { gaussianData: lastGaussianData10, limit1: lastlimit1, limit2: lastlimit2} =
+      calculateGaussian(lastColumnData.slice(0, rowi));
+    const lastPeak10 = getPeakXValue(lastGaussianData10);
+
+    const lastX11 = lastColumnData[rowi + 1];
+    const lastIsDanger = lastX11 < lastlimit2 && lastX11 >lastlimit1;
+
+    createChart(
+      lastHeader,
+      lastGaussianData10,
+      null, // Assuming no 11-point Gaussian data
+      lastX11,
+      lastIsDanger,lastlimit1,lastlimit2
+    );
+
+    // Process all headers except the last one
+    headers.slice(0, lastHeaderIndex).forEach((header, index) => {
+      const columnData = columns
+        .map((row) => row[index])
         .filter(Number.isFinite);
-  
-      const lastGaussianData10 = calculateGaussian(lastColumnData.slice(0, rowi));
-      const lastPeak10 = getPeakXValue(lastGaussianData10);
-  
-      const lastGaussianData11 = calculateGaussian(
-        lastColumnData.slice(0, rowi + 1)
-      );
-      const lastX11 = lastColumnData[rowi + 1];
-      const lastIsDanger = lastX11 > lastPeak10;
-  
-      createChart(
-        lastHeader,
-        lastGaussianData10,
-        lastGaussianData11,
-        lastX11,
-        lastIsDanger
-      );
-  
-      // Process all headers except the last one
-      headers.slice(0, lastHeaderIndex).forEach((header, index) => {
-        const columnData = columns
-          .map((row) => row[index])
-          .filter(Number.isFinite);
-  
-        const gaussianData10 = calculateGaussian(columnData.slice(0, rowi));
-        const peak10 = getPeakXValue(gaussianData10);
-  
-        const gaussianData11 = calculateGaussian(
-          columnData.slice(0, rowi + 1)
-        );
-        const x11 = columnData[rowi + 1];
-  
-        const isDanger = x11 > peak10;
-  
-        createChart(header, gaussianData10, gaussianData11, x11, isDanger);
-      });
-    } catch (error) {
-      console.error("Error loading or processing the Excel file:", error);
-    }
+
+      const { gaussianData: gaussianData10, limit1: lastlimit1, limit2: lastlimit2 } =
+        calculateGaussian(columnData.slice(0, rowi));
+      const peak10 = getPeakXValue(gaussianData10);
+
+      const x11 = columnData[rowi + 1];
+      const isDanger = x11 < lastlimit2 && x11>lastlimit1;
+
+      createChart(header, gaussianData10, null, x11, isDanger,lastlimit1,lastlimit2);
+    });
+  } catch (error) {
+    console.error("Error loading or processing the Excel file:", error);
   }
-  
+}
 
 function calculateGaussian(data) {
   const mean = data.reduce((a, b) => a + b, 0) / data.length;
@@ -154,7 +148,11 @@ function calculateGaussian(data) {
       Math.exp(-0.5 * Math.pow((x - mean) / stdDev, 2));
     gaussianData.push({ x, y });
   }
-  return gaussianData;
+  const limit1=mean-stdDev;
+  const limit2=mean+stdDev;
+
+  // Return both Gaussian data and standard deviation
+  return { gaussianData, limit1,limit2 };
 }
 
 function getPeakXValue(gaussianData) {
@@ -166,7 +164,7 @@ function getPeakXValue(gaussianData) {
 
 let hr = 1;
 
-function createChart(header, gaussianData10, gaussianData11, x11, isDanger) {
+function createChart(header, gaussianData10, gaussianData11, x11, isDanger,lastlimit1,lastlimit2) {
     const chartContainer = document.createElement("div");
     chartContainer.classList.add("chart-grid");
     const canvas = document.createElement("canvas");
@@ -179,9 +177,8 @@ function createChart(header, gaussianData10, gaussianData11, x11, isDanger) {
   
     const colors = {
       backgroundColor: isDanger
-        ? "rgba(255, 0, 0, 1)"
-        : "rgba(0, 192, 36, 1)",
-      borderColor: isDanger ? "rgba(255, 0, 0, 1)" : "rgba(0, 192, 36, 0.63)",
+        ?  "rgba(0, 192, 36, 1)":"rgba(255, 0, 0, 1)",
+      borderColor: isDanger ? "rgba(0, 192, 36, 0.63)": "rgba(255, 0, 0, 1)",
     };
   
     new Chart(canvas.getContext("2d"), {
@@ -204,19 +201,41 @@ function createChart(header, gaussianData10, gaussianData11, x11, isDanger) {
               fill: false,
               showLine: true,
             },
+
+            {
+              label:'limit',
+              data: [{ x: lastlimit1, y: 0 }, { x: lastlimit1, y: Math.max(...gaussianData10.map(d => d.y)) }],
+              borderColor:"rgba(99, 99, 99, 0.5)", // Vertical line color
+              borderWidth: 2,
+              
+              fill: false,
+              showLine: true,
+            },
+            {
+              label:'limit',
+              data: [{ x: lastlimit2, y: 0 }, { x: lastlimit2, y: Math.max(...gaussianData10.map(d => d.y)) }],
+              borderColor: "rgba(99, 99, 99, 0.5)", // Vertical line color
+              borderWidth: 2,
+              
+              fill: false,
+              showLine: true,
+            },
             
           ],
         },
         options: {
           responsive: true,
           plugins: {
+            // legend: {
+            //   display: false, // Hides the legend completely
+            // },
             tooltip: {
                 callbacks: {
                   label: function (tooltipItem) {
                     if (tooltipItem.dataset.label === "cycle time") {
-                      return `x: ${tooltipItem.raw.x}, y: ${tooltipItem.raw.y.toFixed(2)}`; // Show x and y for cycle time
+                      return `x: ${tooltipItem.raw.x.toFixed(4)}, y: ${tooltipItem.raw.y.toFixed(2)}`; // Show x and y for cycle time
                     }
-                    return `x: ${tooltipItem.raw.x}, y: ${tooltipItem.raw.y.toFixed(2)}`; // General case
+                    return `x: ${tooltipItem.raw.x.toFixed(4)}, y: ${tooltipItem.raw.y.toFixed(2)}`; // General case
                   },
                 },
               },
@@ -372,7 +391,7 @@ function handleNoMoreWorkpieces() {
 
 let nor = 10;
 async function fetchExcelData() {
-  const response = await fetch("./data/Book2.xlsx");
+  const response = await fetch("./data/Book2_copy.xlsx");
   const arrayBuffer = await response.arrayBuffer();
   const workbook = XLSX.read(arrayBuffer, { type: "array" });
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -405,7 +424,7 @@ async function fetchExcelData() {
     });
 }
 
-const at = [1.46, 5.95, 10.44, 15.0, 22.39, 50.0];
+const at = [1.96, 12.86, 26.84, 33.31, 44.90, 54];
 let atp = 0;
 
 // Function to create a new row in the table
