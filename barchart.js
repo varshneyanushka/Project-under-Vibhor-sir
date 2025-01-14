@@ -198,7 +198,7 @@ function createChart(
   chartContainer.appendChild(canvas);
   document.getElementById("chartsContainer").appendChild(chartContainer);
 
-  if (isDanger) {
+  if (!isDanger) {
     delays.push(header);
   }
 
@@ -583,15 +583,25 @@ let ds;
 function message() {
   const video = document.getElementById("myVideo");
 
+  // Event listener for when the video ends
   video.addEventListener("ended", function () {
     document.getElementById("message").style.visibility = "visible";
-    ds = delays.join(", ");
-    document.getElementById(
-      "message"
-    ).innerHTML = `There is a delay in : ${ds}`;
+    const ds = delays.join(", ");
+    if (ds === "") {
+      document.getElementById("message").innerHTML =
+        "There were no delays observed!";
+    } else {
+      document.getElementById(
+        "message"
+      ).innerHTML = `There is a delay in: ${ds}`;
+    }
   });
 
+  // Event listener for time updates in the video
   video.addEventListener("timeupdate", function () {
+    const curr = video.currentTime; // Current time of the video
+    const totalDuration = video.duration; // Total duration of the video
+
     if (Math.abs(curr - totalDuration) < 0.1) {
       document.getElementById("message").style.visibility = "visible";
       const ds = delays.join(", ");
@@ -601,13 +611,14 @@ function message() {
       } else {
         document.getElementById(
           "message"
-        ).innerHTML = `There is a delay in :  ${ds}`;
+        ).innerHTML = `There is a delay in: ${ds}`;
       }
     } else {
       document.getElementById("message").style.visibility = "hidden";
     }
   });
 }
+
 
 document.getElementById("myVideo").addEventListener("loadedmetadata", () => {
   totalDuration = document.getElementById("myVideo").duration;
