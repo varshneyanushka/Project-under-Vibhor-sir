@@ -453,19 +453,20 @@ function handleNoMoreWorkpieces() {
     message3.style.marginBottom = "20px";
     messageContainer.appendChild(message3);
 
-    if (timeremaining >=0 && tardiness >= 0) {
+    if ((timeremaining >0 && tardiness >= 0 )|| (timeremaining ===0 && tardiness === 0 ) ) {
       const message4 = document.createElement("p");
       message4.textContent =
-        "You will be able to finish the manufacturing on time. " ;
+        "You will be able to finish the manufacturing on time. "  ;
       message4.style.color = "#50C878"; // Green for success
       message4.style.fontSize = "18px";
       message4.style.fontWeight = "500";
       message4.style.marginBottom = "15px";
       messageContainer.appendChild(message4);
-    } else {
+    } 
+    else {
       const message4 = document.createElement("p");
       message4.textContent =
-        "You will NOT be able to finish the manufacturing on time due to several delays." ;
+        "You will NOT be able to finish the manufacturing on time due to several delays."  ;
       message4.style.color = "#e74c3c"; // Red for failure
       message4.style.fontSize = "18px";
       message4.style.fontWeight = "500";
@@ -496,7 +497,7 @@ function handleNoMoreWorkpieces() {
   document.head.appendChild(style);
 }
 
-
+let flag=false;
 let nor = 10;
 async function fetchExcelData() {
   const response = await fetch("./data/Book2_copy.xlsx");
@@ -518,10 +519,10 @@ async function fetchExcelData() {
       // }
 
       // Check if video time has reached a certain point and add/update rows in the table
-      if (noofjobsrem === 0) {
-        handleNoMoreWorkpieces(); // Clear page and display message
-        return;
-      }
+      // if (noofjobsrem === 0) {
+      //   handleNoMoreWorkpieces(); // Clear page and display message
+      //   return;
+      // }
       if (starttime <= curr && hi < headers.length - 1) {
         const updatedValues = createrow();
         starttime = updatedValues.starttime;
@@ -620,6 +621,12 @@ populateRandomDetails();
 
 document.getElementById("workpiece-column").textContent = rowi + 2;
 function onButtonClick() {
+
+
+  if (noofjobsrem === 1) {
+    handleNoMoreWorkpieces(); // Clear page and display message
+    return;
+  }
   if (barLineChart) {
     barLineChart.destroy();
   }
@@ -669,7 +676,8 @@ function onButtonClick() {
   noofjobsrem--;
 // Update timeremaining and ensure it is an integer
 timeremaining = Math.round(timeremaining - designcycletime) > 0  ? Math.round(timeremaining - designcycletime) : 0;
-
+if(timeremaining===0)
+{flag=true;}
 
 // Update tardiness and ensure it is an integer
 tardiness = tardiness + Math.round(
