@@ -13,11 +13,13 @@
             display: grid;
             grid-template-columns: 1.25fr 0.75fr;
             margin: auto;
+            margin-top: 20px;
         }
         .inner-container-charts {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            margin-right: 40px;
+            margin-right: 30px;
+           
         }
 
         .inner-container-video {
@@ -66,43 +68,61 @@
     </style>
 </head>
 <body >
-    <div class="flex flex-col h-full">
-        
-        <div class="grid grid-cols-12 border-b border-black mb-4 md:grid-cols-12 sm:grid-cols-6 xs:grid-cols-4"> 
-            <div class="col-span-1 md:col-span-1 sm:col-span-2 xs:col-span-1 flex flex-col justify-center items-center border-b border-r border-black">
-                <div class="text-xl font-bold">DATE</div>
-                <div id="date-column"></div>
+    <div class="bg-gray-800 text-white p-4">
+        <div class="flex flex-wrap justify-between items-center">
+            <!-- Date -->
+            <div class="px-2 py-1">
+                <span class="font-bold">DATE:</span>
+                <span id="date-column">-</span>
             </div>
-            <div class="col-span-2 md:col-span-2 sm:col-span-2 xs:col-span-1 flex flex-col justify-center items-center border-r border-b border-black">
-                <div class="text-xl font-bold">No. of Jobs Remaining</div>
-                <div id="jobs"></div>
+            <!-- Order Size -->
+            <div class="px-2 py-1">
+                <span class="font-bold">Order Size:</span>
+                <span>20</span>
             </div>
-            <div class="col-span-2 md:col-span-2 sm:col-span-2 xs:col-span-1 flex flex-col justify-center items-center border-r border-b border-black">
-                <div class="text-xl font-bold">Expected Ending Time</div>
-                <div id="shift-column"></div>
+            <!-- No. of Jobs Remaining -->
+            <div class="px-2 py-1">
+                <span class="font-bold">No. of Jobs Remaining:</span>
+                <span id="jobs">-</span>
             </div>
-            <div class="col-span-2 md:col-span-2 sm:col-span-4 xs:col-span-2 flex flex-col justify-center items-center border-r border-b border-black">
-                <div class="text-xl font-bold">Remaining Time</div>
-                <div id="remaining-shift-time-column"></div>
+            <!-- Target Delivery -->
+            <div class="px-2 py-1">
+                <span class="font-bold">Target Delivery:</span>
+                <span id="target-delivery">-</span>
             </div>
-            <div class="col-span-1 md:col-span-1 sm:col-span-4 xs:col-span-2 flex flex-col justify-center items-center border-r border-b border-black">
-                <div class="text-xl font-bold">Tardiness</div>
-                <div id="tardiness"></div>
+            <!-- Remaining Time -->
+            <div class="px-2 py-1">
+                <span class="font-bold">Remaining Time:</span>
+                <span id="remaining-time">-</span>
             </div>
-            <div class="col-span-2 md:col-span-2 sm:col-span-4 xs:col-span-2 flex flex-col justify-center items-center border-r border-b border-black">
-                <div class="text-xl font-bold">Machine</div>
-                <div id="machine-column">Drill Machine</div>
+            <!-- Expected Completion Time -->
+            <div class="px-2 py-1">
+                <span class="font-bold">Expected Completion Time:</span>
+                <span id="expected-completion-time">-</span>
             </div>
-            <div class="col-span-1 md:col-span-1 sm:col-span-4 xs:col-span-2 flex flex-col justify-center items-center border-r border-b border-black">
-                <div class="text-xl font-bold">Product</div>
-                <div id="product-column">Workpiece A</div>
+            <!-- Tardiness -->
+            <div class="px-2 py-1">
+                <span class="font-bold">Tardiness:</span>
+                <span id="tardiness">-</span>
             </div>
-           
-            <div class="col-span-1 md:col-span-1 sm:col-span-2 xs:col-span-1 flex flex-col justify-center items-center border-r border-b border-black">
-                <div class="text-xl font-bold">Workpiece</div>
-                <div id="workpiece-column"></div>
+            <!-- Machine -->
+            <div class="px-2 py-1">
+                <span class="font-bold">Machine:</span>
+                <span id="machine-column">Drill Machine</span>
+            </div>
+            <!-- Product -->
+            <div class="px-2 py-1">
+                <span class="font-bold">Product:</span>
+                <span id="product-column">Workpiece A</span>
+            </div>
+            <!-- Workpiece -->
+            <div class="px-2 py-1">
+                <span class="font-bold">Workpiece No.:</span>
+                <span id="workpiece-column">-</span>
             </div>
         </div>
+    </div>
+    
 
        
           
@@ -113,10 +133,10 @@
             <!-- Chart Container -->
             
             <div class="inner-container-charts" id="chartsContainer">
-                <div class="chart-grid" id="chart-grid">
-                    <canvas id="barLineChart"></canvas>
+                <!-- <div class="chart-grid" id="chart-grid"> -->
+                   <!-- <canvas id="barLineChart"></canvas> -->
                     
-                </div>
+                
             </div>
                 
            
@@ -150,6 +170,6 @@
         </div>
 
     </div>
-    <script src="barchart.js"></script>
+    <script src="update.js"></script>
 </body>
 </html>

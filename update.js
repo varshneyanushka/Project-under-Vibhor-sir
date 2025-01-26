@@ -1,5 +1,5 @@
 let videoTime, totalDuration, table;
-let designcycletime=0;
+let designcycletime=54;
 function startTimer() {
   if (isRunning) return;
   isRunning = true;
@@ -30,132 +30,12 @@ let ctx;
 let barLineChart;
 
 let delays = [];
-async function loadExcelAndGenerateCharts() {
-  try {
-    const response = await fetch("./data/Book2_copy.xlsx");
-    const arrayBuffer = await response.arrayBuffer();
 
-    const workbook = XLSX.read(arrayBuffer, { type: "array" });
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    const headers = jsonData[0];
-    const columns = jsonData.slice(1).map((row) => row.map(Number));
-    const ctx = document.getElementById("barLineChart").getContext("2d");
-
-    // Chart configuration for bar chart
-    const barLineChart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: headers.slice(0, 6),
-        datasets: [
-          {
-            label: "Actual Time (Bar)",
-            data: columns[rowi + 1].slice(0, 6),
-            backgroundColor: "rgba(0, 4, 255, 0.59)",
-            borderColor: "rgba(0, 4, 255, 1)",
-            borderWidth: 1,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            title: {
-              display: true,
-              text: "Actual Cycle Time",
-              color: "black",
-              font: {
-                weight: "bold",
-                size: 13,
-              },
-            },
-            beginAtZero: true,
-          },
-        },
-        plugins: {
-          legend: {
-            labels: {
-              color: "black",
-            },
-          },
-          title: {
-            color: "black",
-          },
-          tooltip: {
-            callbacks: {
-              label: function (context) {
-                return `${context.dataset.label}: ${context.raw} seconds`;
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // Process the last header and its column separately
-    const lastHeaderIndex = headers.length - 1;
-    const lastHeader = headers[lastHeaderIndex];
-    const lastColumnData = columns
-      .map((row) => row[lastHeaderIndex])
-      .filter(Number.isFinite);
-
-    const {
-      gaussianData: lastGaussianData10,
-      limit1: lastlimit1,
-      limit2: lastlimit2,
-    } = calculateGaussian(lastColumnData.slice(0, rowi));
-    const lastPeak10 = getPeakXValue(lastGaussianData10);
-    designcycletime=lastColumnData[rowi+2];
-
-    const lastX11 = lastColumnData[rowi + 1];
-    const lastIsDanger = lastX11 < lastlimit2 && lastX11 > lastlimit1;
-
-    createChart(
-      lastHeader,
-      lastGaussianData10,
-      null, // Assuming no 11-point Gaussian data
-      lastX11,
-      lastIsDanger,
-      lastlimit1,
-      lastlimit2
-    );
-
-    // Process all headers except the last one
-    headers.slice(0, lastHeaderIndex).forEach((header, index) => {
-      const columnData = columns
-        .map((row) => row[index])
-        .filter(Number.isFinite);
-        
-
-      const {
-        gaussianData: gaussianData10,
-        limit1: lastlimit1,
-        limit2: lastlimit2,
-      } = calculateGaussian(columnData.slice(0, rowi));
-      const peak10 = getPeakXValue(gaussianData10);
-      
-
-      const x11 = columnData[rowi + 1];
-      const isDanger = x11 < lastlimit2 && x11 > lastlimit1;
-
-      createChart(
-        header,
-        gaussianData10,
-        null,
-        x11,
-        isDanger,
-        lastlimit1,
-        lastlimit2
-      );
-    });
-  } catch (error) {
-    console.error("Error loading or processing the Excel file:", error);
-  }
-}
 
 function calculateGaussian(data) {
   const mean = data.reduce((a, b) => a + b, 0) / data.length;
+  
+  
   const stdDev = Math.sqrt(
     data.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / data.length
   );
@@ -171,15 +51,15 @@ function calculateGaussian(data) {
   const limit2 = mean + stdDev;
 
   // Return both Gaussian data and standard deviation
-  return { gaussianData, limit1, limit2 };
+  return { gaussianData,mean,limit1, limit2 };
 }
 
-function getPeakXValue(gaussianData) {
-  return gaussianData.reduce((peak, data) => (data.y > peak.y ? data : peak), {
-    x: 0,
-    y: 0,
-  }).x;
-}
+// function getPeakXValue(gaussianData) {
+//   return gaussianData.reduce((peak, data) => (data.y > peak.y ? data : peak), {
+//     x: 0,
+//     y: 0,
+//   }).x;
+// }
 
 let hr = 1;
 
@@ -300,17 +180,17 @@ function createChart(
   });
   
 
-  if (hr === 1) {
-    const horizontalLine = document.createElement("div");
-    horizontalLine.className = "horizontal-line";
-    document.getElementById("chartsContainer").appendChild(horizontalLine);
-  }
-  hr++;
+//   if (hr === 1) {
+//     const horizontalLine = document.createElement("div");
+//     horizontalLine.className = "horizontal-line";
+//     document.getElementById("chartsContainer").appendChild(horizontalLine);
+//   }
+//   hr++;
 }
 
 let noofjobsrem = 10;
-const expecteddeliverytime = 540;
-let timeremaining = 540;
+const expecteddeliverytime = 486;
+let timeremaining = expecteddeliverytime;
 let tardiness = 0;
 
 
@@ -338,9 +218,10 @@ function populateRandomDetails() {
   // Set values
   document.getElementById("date-column").textContent = formattedDate;
   document.getElementById("jobs").textContent = noofjobsrem-1;
-  document.getElementById("shift-column").textContent =expecteddeliverytime + " seconds";
-  document.getElementById("remaining-shift-time-column").textContent =timeremaining + " seconds";
-  document.getElementById("tardiness").textContent = tardiness + " seconds";
+  document.getElementById("target-delivery").textContent =expecteddeliverytime + " hrs";
+  document.getElementById("expected-completion-time").textContent = designcycletime*(noofjobsrem-1).toFixed(2) + " hrs";
+  document.getElementById("remaining-time").textContent =timeremaining + " hrs";
+  document.getElementById("tardiness").textContent = tardiness + "hrs";
 }
 
 let headers = [];
@@ -446,7 +327,7 @@ function handleNoMoreWorkpieces() {
     message3.innerHTML =
       "You have a latency of <span style='color: #e74c3c; font-weight: bold;'>" +
       tardiness +
-      " seconds</span>.";
+      " hrs</span>.";
     message3.style.color = "#333";
     message3.style.fontSize = "20px";
     message3.style.fontWeight = "500";
@@ -499,85 +380,164 @@ function handleNoMoreWorkpieces() {
 
 let flag=false;
 let nor = 10;
+// async function fetchExcelData() {
+//     const response = await fetch("./data/Book2_copy.xlsx");
+//     const arrayBuffer = await response.arrayBuffer();
+//     const workbook = XLSX.read(arrayBuffer, { type: "array" });
+//     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+//     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  
+//     headers = jsonData[0];
+//     columns = jsonData.slice(1).map((row) => row.map(Number));
+//     nor = jsonData.length;
+  
+//     let chartQueue = []; // Queue to store chart data
+  
+//     document
+//       .getElementById("myVideo")
+//       .addEventListener("timeupdate", function () {
+//         const curr = this.currentTime;
+  
+//         // Update table rows as usual
+//         if (starttime <= curr && hi < headers.length - 1) {
+//           const updatedValues = createrow();
+//           starttime = updatedValues.starttime;
+//           serial = updatedValues.serial;
+//           hi = updatedValues.hi;
+//           atp = updatedValues.atp;
+  
+//           // Add chart data to the queue
+//           chartQueue.push({
+//             endingTime: updatedValues.endingTime,
+//             header: updatedValues.header,
+//           });
+//         }
+  
+//         // Check if any chart should be generated
+//         while (chartQueue.length > 0 && chartQueue[0].endingTime <= curr) {
+//           const chartData = chartQueue.shift(); // Get the first item in the queue
+//           generateChart(chartData.header); // Generate chart for this header
+//         }
+//       });
+//   }
+
+let chartQueue = [];
 async function fetchExcelData() {
-  const response = await fetch("./data/Book2_copy.xlsx");
-  const arrayBuffer = await response.arrayBuffer();
-  const workbook = XLSX.read(arrayBuffer, { type: "array" });
-  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-  const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-  headers = jsonData[0];
-  columns = jsonData.slice(1).map((row) => row.map(Number));
-  nor = jsonData.length;
-
-  document
-    .getElementById("myVideo")
-    .addEventListener("timeupdate", function () {
-      // const t = document.getElementById("c");
-      // if (t) {
-      //     t.textContent = curr; // Update current time in the HTML
-      // }
-
-      // Check if video time has reached a certain point and add/update rows in the table
-      // if (noofjobsrem === 0) {
-      //   handleNoMoreWorkpieces(); // Clear page and display message
-      //   return;
-      // }
+    const response = await fetch("./data/Book2_copy.xlsx");
+    const arrayBuffer = await response.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: "array" });
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  
+    headers = jsonData[0];
+    columns = jsonData.slice(1).map((row) => row.map(Number));
+    nor = jsonData.length;
+    const lastHeader = headers[headers.length - 1];
+  
+    const columnData = columns.map((row) => row[headers.indexOf(lastHeader)]).filter(Number.isFinite);
+    const result= calculateGaussian(columnData.slice(0, rowi));
+    
+    designcycletime=result.mean.toFixed(2);
+    chartQueue = [];
+    // Monitor video time updates
+    document.getElementById("myVideo").addEventListener("timeupdate", function () {
+      const curr = this.currentTime;
+  
+      // Update table rows as usual
       if (starttime <= curr && hi < headers.length - 1) {
         const updatedValues = createrow();
         starttime = updatedValues.starttime;
         serial = updatedValues.serial;
         hi = updatedValues.hi;
         atp = updatedValues.atp;
+  
+        // Add chart data to the queue
+        chartQueue.push({
+          endingTime: updatedValues.endingTime,
+          header: updatedValues.header,
+        });
       }
+     
+      // Check if any chart should be generated
+      while (chartQueue.length > 0 && chartQueue[0].endingTime <= curr) {
+        const chartData = chartQueue.shift(); // Get the first item in the queue
+        generateChart(chartData.header); // Generate chart for this header
+
+      }
+
+      if(curr===54.966)
+      {
+        const chartData = chartQueue.shift(); // Get the first item in the queue
+        generateChart(chartData.header);
+      }
+     
     });
-}
+  }
+  
+  
+  
+  
+  function generateChart(header) {
+    const columnData = columns.map((row) => row[headers.indexOf(header)]).filter(Number.isFinite);
+    const { gaussianData: gaussianData10, limit1, limit2 } = calculateGaussian(columnData.slice(0, rowi));
+    const x11 = columnData[rowi + 1];
+    const isDanger = x11 < limit2 && x11 > limit1;
+  
+    createChart(header, gaussianData10, null, x11, isDanger, limit1, limit2);
+  }
+  
 
 const at = [1.96, 12.86, 26.84, 33.31, 44.9, 54];
 let atp = 0;
 
-// Function to create a new row in the table
+
+
+
 function createrow() {
-  let tbody = document.getElementById("time-table").querySelector("tbody");
-
-  if (!tbody) {
-    const newTbody = document.createElement("tbody");
-    document.getElementById("time-table").appendChild(newTbody);
-    tbody = newTbody;
+    let tbody = document.getElementById("time-table").querySelector("tbody");
+  
+    if (!tbody) {
+      const newTbody = document.createElement("tbody");
+      document.getElementById("time-table").appendChild(newTbody);
+      tbody = newTbody;
+    }
+  
+    // Access operation and calculate ending time
+    let cycletime = parseFloat(columns[rowi + 1][hi].toFixed(2));
+    let endingTime = parseFloat((starttime + cycletime).toFixed(2));
+  
+    // Create a new row for the table
+    const newRow = document.createElement("tr");
+    newRow.classList.add("border", "border-black");
+  
+    newRow.innerHTML = `
+                  <td class="border border-black p-1">${
+                    serial + 1
+                  }</td> <!-- Serial No. -->
+                  <td class="border border-black p-1">${
+                    headers[hi]
+                  }</td> <!-- Operation -->
+                  <td class="border border-black p-1">${starttime}</td> <!-- Starting Time -->
+                  <td class="border border-black p-1">${endingTime}</td> <!-- Expected Ending Time -->
+                  <td class="border border-black p-1">${
+                    at[atp]
+                  }</td> <!-- Additional Time Parameter -->
+              `;
+  
+    tbody.appendChild(newRow);
+  
+    // Return updated values and the chart data
+    return {
+      starttime: endingTime,
+      serial: serial + 1,
+      hi: hi + 1,
+      atp: atp + 1,
+      endingTime, // Pass the ending time to match with the video
+      header: headers[hi], // Current header
+    };
   }
+  
 
-  // Access operation from columns at the current index and hi
-  const cycletime = parseFloat(columns[rowi + 1][hi].toFixed(2));
-
-  // Create a new row for the table
-  const newRow = document.createElement("tr");
-  newRow.classList.add("border", "border-black");
-
-  newRow.innerHTML = `
-                <td class="border border-black p-1">${
-                  serial + 1
-                }</td> <!-- Serial No. -->
-                <td class="border border-black p-1">${
-                  headers[hi]
-                }</td> <!-- Operation -->
-                <td class="border border-black p-1">${starttime}</td> <!-- Starting Time -->
-                <td class="border border-black p-1">${parseFloat(
-                  (starttime + cycletime).toFixed(2)
-                )}</td> <!-- Expected Ending Time -->
-                <td class="border border-black p-1">${
-                  at[atp]
-                }</td> <!-- Expected Ending Time -->
-            `;
-
-  tbody.appendChild(newRow);
-
-  return {
-    starttime: parseFloat((starttime + cycletime).toFixed(2)),
-    serial: serial + 1,
-    hi: hi + 1,
-    atp: atp + 1,
-  };
-}
 let ds;
 
 function message() {
@@ -626,11 +586,12 @@ document.getElementById("myVideo").addEventListener("loadedmetadata", () => {
 });
 
 fetchExcelData();
-loadExcelAndGenerateCharts();
+
 
 populateRandomDetails();
 
 document.getElementById("workpiece-column").textContent = rowi + 2;
+
 function onButtonClick() {
 
 
@@ -642,29 +603,37 @@ function onButtonClick() {
     barLineChart.destroy();
   }
 
-  const chartsContainer = document.getElementById("chartsContainer");
-  while (chartsContainer.firstChild) {
-    chartsContainer.removeChild(chartsContainer.firstChild);
-  }
+  let chartsContainer = document.getElementById("chartsContainer");
+
+// Clear all child elements
+while (chartsContainer.firstChild) {
+    chartsContainer.firstChild.remove(); // Removes the child element completely
+}
+
+// Optionally reset the container's inner HTML (if there are leftover text nodes or styles)
+chartsContainer.innerHTML = "";
+
+// If there are any inline styles or attributes, you can also reset them:
+ // Removes any inline styles
+
+
 
   const tbody = document.getElementById("time-table").querySelector("tbody");
   if (tbody) {
     tbody.innerHTML = "";
   }
+  chartQueue=[];
 
-  // if (barLineChart) {
-  //     barLineChart='';
-  // }
 
-  const chartGridElement = document.createElement("div");
-  chartGridElement.id = "chart-grid";
-  chartGridElement.className = "chart-grid";
+//   const chartGridElement = document.createElement("div");
+//   chartGridElement.id = "chart-grid";
+//   chartGridElement.className = "chart-grid";
 
-  const barChartCanvas = document.createElement("canvas");
-  barChartCanvas.id = "barLineChart";
+// //   const barChartCanvas = document.createElement("canvas");
+// //   barChartCanvas.id = "barLineChart";
 
-  chartGridElement.appendChild(barChartCanvas);
-  document.getElementById("chartsContainer").appendChild(chartGridElement);
+// //   chartGridElement.appendChild(barChartCanvas);
+//   document.getElementById("chartsContainer").appendChild(chartGridElement);
 
   curr = 0;
   hi = 0;
@@ -674,6 +643,7 @@ function onButtonClick() {
   delays = [];
   atp = 0;
   hr = 1;
+  
 
   const video = document.getElementById("myVideo");
   video.currentTime = 0;
@@ -688,21 +658,34 @@ timeremaining = Math.round(timeremaining - designcycletime) > 0  ? Math.round(ti
 if(timeremaining===0)
 {flag=true;}
 
-// Update tardiness and ensure it is an integer
-tardiness = tardiness + Math.round(
-  (54 - designcycletime > 0 || isNaN(designcycletime)) 
-  ? 0 
-  : designcycletime - 54
-);
 
+document.getElementById("workpiece-column").textContent = rowi + 2;
+
+document.getElementById("jobs").textContent = noofjobsrem-1;
+document.getElementById("remaining-time").textContent = timeremaining + " hrs";
+document.getElementById("expected-completion-time").textContent = (designcycletime*(noofjobsrem-1)).toFixed(2) + " hrs";
+
+
+if (expectedCompletionTime <= targetDeliveryTime) {
+  tardiness = 0;
+} else {
+  tardiness = tardiness + Math.round(
+    (54 - designcycletime > 0 || isNaN(designcycletime)) 
+    ? 0 
+    : designcycletime - 54
+  );
+}
 
 
   
-  document.getElementById("jobs").textContent = noofjobsrem-1;
-  document.getElementById("remaining-shift-time-column").textContent = timeremaining + " seconds";
-  document.getElementById("tardiness").textContent = tardiness + " seconds";
+  document.getElementById("tardiness").textContent = tardiness.toFixed(2) + " hrs";
+  
 
-  document.getElementById("workpiece-column").textContent = rowi + 2;
+  
   fetchExcelData();
-  loadExcelAndGenerateCharts();
+  
 }
+
+  
+
+
