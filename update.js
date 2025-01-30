@@ -435,7 +435,7 @@ async function fetchExcelData() {
     const lastHeader = headers[headers.length - 1];
   
     const columnData = columns.map((row) => row[headers.indexOf(lastHeader)]).filter(Number.isFinite);
-    const result= calculateGaussian(columnData.slice(0, rowi));
+    const result= calculateGaussian(columnData.slice(0, rowi-1));
     
     designcycletime=result.mean.toFixed(2);
     chartQueue = [];
@@ -511,15 +511,15 @@ function createrow() {
     newRow.classList.add("border", "border-black");
   
     newRow.innerHTML = `
-                  <td class="border border-black p-1">${
+                  <td style="text-align: center;" class="border border-black p-1">${
                     serial + 1
                   }</td> <!-- Serial No. -->
-                  <td class="border border-black p-1">${
+                  <td style="text-align: center;" class="border border-black p-1">${
                     headers[hi]
                   }</td> <!-- Operation -->
-                  <td class="border border-black p-1">${starttime}</td> <!-- Starting Time -->
-                  <td class="border border-black p-1">${endingTime}</td> <!-- Expected Ending Time -->
-                  <td class="border border-black p-1">${
+                  <td style="text-align: center;" class="border border-black p-1">${starttime}</td> <!-- Starting Time -->
+                  <td style="text-align: center;" class="border border-black p-1">${endingTime}</td> <!-- Expected Ending Time -->
+                  <td style="text-align: center;" class="border border-black p-1">${
                     at[atp]
                   }</td> <!-- Additional Time Parameter -->
               `;
@@ -657,13 +657,14 @@ chartsContainer.innerHTML = "";
 timeremaining = Math.round(timeremaining - designcycletime) > 0  ? Math.round(timeremaining - designcycletime) : 0;
 if(timeremaining===0)
 {flag=true;}
+let expectedCompletionTime= (designcycletime*(noofjobsrem-1)).toFixed(2);
 
 
 document.getElementById("workpiece-column").textContent = rowi + 2;
 
 document.getElementById("jobs").textContent = noofjobsrem-1;
 document.getElementById("remaining-time").textContent = timeremaining + " hrs";
-document.getElementById("expected-completion-time").textContent = (designcycletime*(noofjobsrem-1)).toFixed(2) + " hrs";
+document.getElementById("expected-completion-time").textContent = expectedCompletionTime + " hrs";
 
 
 if (expectedCompletionTime <= targetDeliveryTime) {
